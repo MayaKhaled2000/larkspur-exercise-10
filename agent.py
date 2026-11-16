@@ -17,10 +17,80 @@ from support import (MODEL, SYSTEM_PROMPT, call_local, execute_tool, mcp_client,
 MAX_TOOL_CALLS = 8  # Larkspur's own build capped the loop here; then a human takes over.
 
 TONE_ADDENDUM = ""                       # ✏️ Build 4, step 4.1, intelligence goal
-EXTRA_TOOLS: List[Dict[str, Any]] = []   # ✏️ Build 2, step 2.1: schemas for the tools you add
-LOCAL_TOOLS: Dict[str, Any] = {}         # ✏️ Build 2, step 2.1: the functions behind them
-
-
+EXTRA_TOOLS: List[Dict[str, Any]] = [
+    {
+        "name": "next_available_day",
+        "description": (
+            "Use when a customer asks for the soonest day they can travel on a route. "
+            "After looking up the booking, provide the disrupted segment's origin, "
+            "destination, date, and cabin; date must be YYYY-MM-DD and cabin is Y (main) "
+            "or J (first). Returns the earliest date on or after that date with an open "
+            "seat for one passenger, or says no open seat was found in the schedule."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "origin": {"type": "string", "description": "Three-letter origin airport code."},
+                "dest": {"type": "string", "description": "Three-letter destination airport code."},
+                "date": {"type": "string", "description": "Start searching on this date, YYYY-MM-DD."},
+                "cabin": {
+                    "type": "string",
+                    "enum": ["Y", "J"],
+                    "description": "Cabin to search: Y for main or J for first.",
+                },
+            },
+            "required": ["origin", "dest", "date"],
+        },
+       
+    },
+    {
+            "name": "fare_rules",
+            "description": (
+                "Use when the customer asks why a rule applies, what the handbook says, or what they are entitled to (fare families, rebooking, refunds, meals, hotel, goodwill). "
+                "Call it as well as check_policy, not instead of it: check_policy decides what this customer is owed, this returns the written handbook text that explains why. "
+                "It does not look up the booking or flight and issues nothing. "
+                "Refunds and hotel approval are done by people and regulation questions go to Customer Care: promise nothing beyond the text."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "The subject the customer is asking about, e.g. hotel, meal credit, refund, changing a flight.",
+                    },
+                },
+                "required": ["topic"],
+            },
+        },
+]
+ 
+  # ✏️ Build 2, step 2.1: schemas for the tools you add
+def next_available_day(origin, dest, date, cabin="Y"):
+ 
+ 
+    """The earliest date with an open seat. Not one of the nine, and not in
+    TOOL_FUNCTIONS: the backend function existed all along and nothing had told
+    Claude it was there.
+ 
+    pax_count never crosses this function on purpose. The backend then answers
+    for a party of one, and finding that gap is Build 3's capacity case.
+    """
+    return backend.earliest_alternative_date(origin, dest, date, cabin)
+ 
+def fare_rules(topic: str) -> str:
+    from pathlib import Path
+    path = Path(__file__).parent / "data" / "americas" / "fare_rules_excerpt.md"
+    paragraphs = path.read_text(encoding="utf-8").split("\n\n")
+    words = [w for w in topic.lower().split() if len(w) > 3]
+    matches = [p for p in paragraphs if any(w in p.lower() for w in words)]
+    if not matches:
+        return f"The handbook excerpt has nothing on '{topic}'. I don't know; do not guess."
+    return "\n\n".join(matches)
+LOCAL_TOOLS: Dict[str, Any] = {
+    "next_available_day": next_available_day,
+    "fare_rules": fare_rules,
+}         # ✏️ Build 2, step 2.1: the functions behind them
+  
 def text_of(response) -> str:
     """Given. The last non-empty text block, never content[0]."""
     texts = [b.text for b in response.content if getattr(b, "type", None) == "text" and b.text]
