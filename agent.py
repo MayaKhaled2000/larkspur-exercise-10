@@ -119,17 +119,25 @@ def build_tools() -> List[Dict[str, Any]]:                 # ✏️ Build 1, ste
                 "type": "object",
                 "properties": {
                     "flight_no": {"type": "string"},
-                    "date": {"type": "string", "description": "MM/DD/YYYY"},
+                    "date": {"type": "string", "description": "YYYY-MM-DD"},
                 },
                 "required": ["flight_no", "date"],
             },
         },
         {
             "name": "search_alternatives",
-            "description": "search",
+            "description": (
+                "Find alternative flights for the customer's disrupted segment. Use this "
+                "only after check_policy has confirmed rebooking is allowed, and only offer "
+                "options inside its rebooking window. Only call it with a PNR that "
+                "lookup_booking has already verified. Returns ranked options with their "
+                "details; each has an option_id, which is what hold_seat takes. This does "
+                "not rebook anyone: to rebook, hold_seat the chosen option, then the "
+                "customer must click Confirm before confirm_rebooking can run."
+            ),
             "input_schema": {
                 "type": "object",
-                "properties": {"pnr": {"type": "string"}},
+                "properties": {"pnr": {"type": "string", "description": "The six-character confirmation code (PNR) of the reservation, as given to lookup_booking."}},
                 "required": ["pnr"],
             },
         },
