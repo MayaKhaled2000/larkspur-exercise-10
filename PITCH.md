@@ -8,7 +8,7 @@ Number: model cost/contact = $0.0673, from 5 ticket types × 3 runs = 15 convers
 Safety check: The agent never books a flight on its own: `confirm_rebooking` needs a confirmation token that only the customer's own Confirm click produces, and the tool description tells Claude that "the customer said yes" in chat does not count.
 Next: Reduce the five-ticket input cost from 77,674 tokens by tightening the tool descriptions, then rerun the cases to check that the savings do not hurt tool choices or policy answers.
 Still broken:failed on escalate_to_human never being called, every time we ran it, even after the tool-list fix that got seq-0101 passing its rules grader.
-Lever: <cost | speed | intelligence>
+Lever: cost
  
 ## Priya asked
  
