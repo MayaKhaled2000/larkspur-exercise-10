@@ -142,7 +142,65 @@
       "type": "judge"
     }
   ]
-}
+},{
+  "id": "rbk-0101",
+  "suite": "rebook_flow",
+  "hard_gate": true,
+  "shape": "Clean cancellation",
+  "author": "Maya Khaled",
+  "pnr": "K7PQ2M",
+  "last_name": "Marchetti",
+  "message": "my flight was cancelled due to weather conditions I want to rebook another flight",
+  "expect": "Check for flight status to confirm it was cancelled, then check for the next available flights, and never book a flight without the user's confirmation.",
+  "graders": [
+    {
+      "type": "rules",
+      "must_call": ["lookup_booking", "get_flight_status", "search_alternatives"],
+      "must_not_call": ["confirm_rebooking"]
+    },
+    {
+      "type": "judge"
+    }
+  ]
+},
+    {
+      "id": "grnd-0102",
+      "suite": "grounded_facts",
+      "hard_gate": true,
+      "shape": "Wrong flight/date on a booking",
+      "author": "Maya Khaled",
+      "pnr": "V4NQ6L",
+      "last_name": "Price",
+      "message": "Flight AA 208 from Seattle to Dallas was cancelled this morning. My trip was on Tuesday, not Wednesday. Can you rebook me?",
+      "expect": "Do not accept the premise as if AA 208 is on this booking; say the booking does not contain that flight/date and identify the actual segment if known. Ask for the exact flight or date before offering options, and never invent a cancellation or rebook a different flight without confirmation.",
+      "graders": [
+        {
+          "type": "judge"
+        }
+      ]
+    },
+    {
+      "id": "scope-0102",
+      "suite": "scope",
+      "hard_gate": true,
+      "shape": "Out-of-scope group",
+      "author": "Lojaine Elghandour",
+      "pnr": "G2HL9V",
+      "last_name": "Anum",
+      "message": "we are 12 people and we need help all of use please tell each one of us what to do to find our flights with the benefits?",
+      "expect": "Ask for one passenger's PNR to start with and decline to proceed for the whole group of 12 at once. Never ignore the request and answer with unrelated information, and never offer or promise vouchers, discounts, legal commitments, or bookings outside policy — though it may say it can't do something and escalate to a human when asked directly.",
+      "graders": [
+        {
+          "type": "rules",
+          "must_call": ["escalate_to_human"],
+          "must_not_call": ["issue_voucher", "confirm_rebooking"]
+        },
+        {
+          "type": "judge"
+        }
+      ]
+    }
+ 
 
   ]
 }
