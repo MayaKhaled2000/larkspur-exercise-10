@@ -76,7 +76,8 @@ def run_agent(pnr: str, last_name: str, message: str) -> str:            # âœï¸
         )
         answer = text_of(response)
         turns += 1
- 
+        
+    answer = text_of(response)
     return answer
  
  
